@@ -3,9 +3,9 @@
 #
 
 # Add source to this project's executable.
-add_executable (Context "Context.cpp" )
+add_executable (Context "Context.cpp"  "Context.h" "Main.cpp")
 
-if (CMAKE_VERSION VERSION_GREATER 3.12)
+if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.12)
   set_property(TARGET Context PROPERTY CXX_STANDARD 20)
 endif()
 
