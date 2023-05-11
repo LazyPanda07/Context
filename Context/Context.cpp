@@ -40,6 +40,12 @@ Context::Context(string&& value) :
 	this->set_scalar(move(value));
 }
 
+Context::Context(const char* value) :
+	Context(string(value))
+{
+	
+}
+
 Context::Context(initializer_list<double> values) :
 	Context()
 {
@@ -61,33 +67,7 @@ Context::Context(Context&& other) noexcept
 
 Context& Context::operator = (const Context& other)
 {
-	switch (other.data.index())
-	{
-	case Context::int_type:
-		data = other.get_int();
-
-		break;
-
-	case Context::double_type:
-		data = other.get_double();
-
-		break;
-
-	case Context::bool_type:
-		data = other.get_bool();
-
-		break;
-
-	case Context::string_type:
-		data = other.get_string();
-
-		break;
-
-	case Context::array_type:
-		break;
-	case Context::container_type:
-		break;
-	}
+	data = other.data;
 
 	spaces_per_depth = other.spaces_per_depth;
 
@@ -107,40 +87,40 @@ void Context::add_element(const string& key, const Context& context)
 {
 	if (data.index() != type_enum::container_type)
 	{
-		data = unordered_map<string, unique_ptr<Context>>();
+		data = unordered_map<string, Context>();
 	}
 
-	get<unordered_map<string, unique_ptr<Context>>>(data)[key] = make_unique<Context>(context);
+	get<unordered_map<string, Context>>(data)[key] = context;
 }
 
 void Context::add_element(const string& key, Context&& context)
 {
 	if (data.index() != type_enum::container_type)
 	{
-		data = unordered_map<string, unique_ptr<Context>>();
+		data = unordered_map<string, Context>();
 	}
 
-	get<unordered_map<string, unique_ptr<Context>>>(data)[key] = make_unique<Context>(move(context));
+	get<unordered_map<string, Context>>(data)[key] = move(context);
 }
 
 void Context::add_element(const Context& context)
 {
 	if (data.index() != type_enum::array_type)
 	{
-		data = vector<unique_ptr<Context>>();
+		data = vector<Context>();
 	}
 
-	get<vector<unique_ptr<Context>>>(data).push_back(make_unique<Context>(context));
+	get<vector<Context>>(data).push_back(context);
 }
 
 void Context::add_element(Context&& context)
 {
 	if (data.index() != type_enum::array_type)
 	{
-		data = vector<unique_ptr<Context>>();
+		data = vector<Context>();
 	}
 
-	get<vector<unique_ptr<Context>>>(data).push_back(make_unique<Context>(move(context)));
+	get<vector<Context>>(data).push_back(move(context));
 }
 
 void Context::set_scalar(int value)
@@ -188,26 +168,19 @@ const string& Context::get_string() const
 	return get<string>(data);
 }
 
-vector<Context> Context::get_array() const
+const vector<Context>& Context::get_array() const
 {
-	vector<Context> contexts;
-
-	for (const auto& value : get<vector<unique_ptr<Context>>>(data))
-	{
-		contexts.push_back(*value);
-	}
-
-	return contexts;
+	return get<vector<Context>>(data);
 }
 
-const unordered_map<string, unique_ptr<Context>>& Context::get_container() const
+const unordered_map<string, Context>& Context::get_container() const
 {
-	return get<unordered_map<string, unique_ptr<Context>>>(data);
+	return get<unordered_map<string, Context>>(data);
 }
 
 const Context& Context::get_element(const string& key)
 {
-	return *get<unordered_map<string, unique_ptr<Context>>>(data)[key];
+	return get<unordered_map<string, Context>>(data)[key];
 }
 
 string Context::get_str(int depth) const
@@ -266,7 +239,7 @@ string Context::get_str(int depth) const
 			
 			for (const auto& [key, value] : this->get_container())
 			{
-				tem += format("{}{}: {},\n", offset, key, value->get_str(depth + 1));
+				tem += format("{}{}: {},\n", offset, key, value.get_str(depth + 1));
 			}
 
 			tem.pop_back(); // \n

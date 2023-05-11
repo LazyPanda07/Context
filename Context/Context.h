@@ -11,8 +11,8 @@ class Context
 private:
 	using type = std::variant<
 		int, double, bool, std::string,
-		std::vector<std::unique_ptr<Context>>,
-		std::unordered_map<std::string, std::unique_ptr<Context>>
+		std::vector<Context>,
+		std::unordered_map<std::string, Context>
 	>;
 
 	enum type_enum
@@ -41,6 +41,8 @@ public:
 	explicit Context(const std::string& value);
 
 	explicit Context(std::string&& value);
+
+	explicit Context(const char* value);
 
 	explicit Context(std::initializer_list<double> values);
 
@@ -78,9 +80,9 @@ public:
 
 	const std::string& get_string() const;
 
-	std::vector<Context> get_array() const;
+	const std::vector<Context>& get_array() const;
 
-	const std::unordered_map<std::string, std::unique_ptr<Context>>& get_container() const;
+	const std::unordered_map<std::string, Context>& get_container() const;
 
 	const Context& get_element(const std::string& key);
 	

@@ -23,7 +23,7 @@ int main(int argc, char** argv)
 
 	Context ctx2;
 
-	ctx2.add_element("name", Context("str"s));
+	ctx2.add_element("name", Context("str"));
 	ctx2.add_element("age", Context(18));
 	ctx2.add_element("is_student", Context(true));
 	ctx2.add_element("grades", Context({ 85, 90, 95 }));
