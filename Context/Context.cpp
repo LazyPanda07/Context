@@ -166,6 +166,96 @@ bool Context::is_container() const
 	return data.index() == type_enum::container_type;
 }
 
+bool Context::pop_back()
+{
+	if (!this->is_array())
+	{
+		return false;
+	}
+
+	vector<Context>& array = this->get_array();
+
+	if (array.size())
+	{
+		array.pop_back();
+		
+		return true;
+	}
+
+	return false;
+}
+
+bool Context::remove(const Context& context)
+{
+	if (this->is_array())
+	{
+		return erase(this->get_array(), context);
+	}
+	else if (this->is_container())
+	{
+		unordered_map<string, Context>& container = this->get_container();
+
+		for (auto it = container.begin(); it != container.end(); ++it)
+		{
+			if (it->second == context)
+			{
+				container.erase(it);
+
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+bool Context::remove(size_t index)
+{
+	if (!this->is_array())
+	{
+		return false;
+	}
+
+	vector<Context>& array = this->get_array();
+
+	if (array.size() <= index)
+	{
+		return false;
+	}
+
+	array.erase(array.begin() + index);
+
+	return true;
+}
+
+bool Context::remove(const string& key, bool recursive)
+{
+	if (!this->is_container())
+	{
+		return false;
+	}
+
+	unordered_map<string, Context>& container = this->get_container();
+
+	if (container.erase(key))
+	{
+		return true;
+	}
+
+	if (recursive)
+	{
+		for (auto& [key, value] : container)
+		{
+			if (value.remove(key, true))
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
 void Context::set_scalar(int value)
 {
 	data = value;
@@ -211,9 +301,19 @@ const string& Context::get_string() const
 	return get<string>(data);
 }
 
+vector<Context>& Context::get_array()
+{
+	return get<vector<Context>>(data);
+}
+
 const vector<Context>& Context::get_array() const
 {
 	return get<vector<Context>>(data);
+}
+
+unordered_map<string, Context>& Context::get_container()
+{
+	return get<unordered_map<string, Context>>(data);
 }
 
 const unordered_map<string, Context>& Context::get_container() const
@@ -307,6 +407,11 @@ Context& Context::operator [] (size_t index)
 Context& Context::operator [] (const string& key)
 {
 	return get<unordered_map<string, Context>>(data).at(key);
+}
+
+bool Context::operator == (const Context& other) const noexcept
+{
+	return this->is_valid() && other.is_valid() && data == other.data;
 }
 
 Context::operator bool() const

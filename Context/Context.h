@@ -82,6 +82,17 @@ public:
 
 	bool is_container() const;
 
+	bool pop_back();
+
+	bool remove(const Context& context);
+
+	bool remove(size_t index);
+
+	/*
+	* @param recursive If key not in this container then try to find key in other containers inside this
+	*/
+	bool remove(const std::string& key, bool recursive = false);
+
 	void set_scalar(int value);
 	
 	void set_scalar(double value);
@@ -100,7 +111,11 @@ public:
 
 	const std::string& get_string() const;
 
+	std::vector<Context>& get_array();
+
 	const std::vector<Context>& get_array() const;
+
+	std::unordered_map<std::string, Context>& get_container();
 
 	const std::unordered_map<std::string, Context>& get_container() const;
 
@@ -111,6 +126,8 @@ public:
 	Context& operator [] (size_t index);
 
 	Context& operator [] (const std::string& key);
+
+	bool operator == (const Context& other) const noexcept;
 
 	explicit operator bool () const;
 

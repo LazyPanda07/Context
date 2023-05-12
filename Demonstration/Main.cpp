@@ -44,19 +44,19 @@ int main(int argc, char** argv)
 
 	Context ctx;
 	Context array;
-	Context element;
 
-	element.add_element
+	array.add_element
 	(
-		"bbox",
 		Context().add_element
 		(
-			"x",
-			Context(5.5)
+			"bbox",
+			Context().add_element
+			(
+				"x",
+				Context(5.5)
+			)
 		)
 	);
-
-	array.add_element(element);
 
 	ctx.add_element("objects", array);
 
