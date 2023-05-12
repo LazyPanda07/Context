@@ -4,12 +4,12 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
-#include <memory>
 
 class Context
 {
 private:
 	using type = std::variant<
+		nullptr_t,
 		int, double, bool, std::string,
 		std::vector<Context>,
 		std::unordered_map<std::string, Context>
@@ -17,7 +17,7 @@ private:
 
 	enum type_enum
 	{
-		int_type,
+		int_type = 1,
 		double_type,
 		bool_type,
 		string_type,
@@ -62,6 +62,8 @@ public:
 
 	void add_element(Context&& context);
 
+	bool is_valid() const;
+
 	void set_scalar(int value);
 	
 	void set_scalar(double value);
@@ -87,6 +89,8 @@ public:
 	const Context& get_element(const std::string& key);
 	
 	std::string get_str(int depth = 1) const;
+
+	explicit operator bool () const;
 
 	~Context() = default;
 };

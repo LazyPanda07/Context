@@ -123,6 +123,11 @@ void Context::add_element(Context&& context)
 	get<vector<Context>>(data).push_back(move(context));
 }
 
+bool Context::is_valid() const
+{
+	return data.index();
+}
+
 void Context::set_scalar(int value)
 {
 	data = value;
@@ -254,4 +259,9 @@ string Context::get_str(int depth) const
 	}
 
 	return result;
+}
+
+Context::operator bool() const
+{
+	return this->is_valid();
 }
