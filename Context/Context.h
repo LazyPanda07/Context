@@ -52,6 +52,8 @@ public:
 
 	explicit Context(std::initializer_list<double> values);
 
+	explicit Context(std::initializer_list<int> values);
+
 	Context(const Context& other);
 
 	Context(Context&& other) noexcept;
@@ -81,6 +83,10 @@ public:
 	bool is_array() const;
 
 	bool is_container() const;
+
+	bool insert(size_t index, const Context& context);
+
+	bool insert(size_t index, Context&& context);
 
 	bool pop_back();
 

@@ -55,6 +55,15 @@ Context::Context(initializer_list<double> values) :
 	}
 }
 
+Context::Context(initializer_list<int> values) :
+	Context()
+{
+	for (int value : values)
+	{
+		this->add_element(Context(value));
+	}
+}
+
 Context::Context(const Context& other)
 {
 	(*this) = other;
@@ -166,6 +175,44 @@ bool Context::is_container() const
 	return data.index() == type_enum::container_type;
 }
 
+bool Context::insert(size_t index, const Context& context)
+{
+	if (!this->is_array())
+	{
+		return false;
+	}
+
+	vector<Context>& array = this->get_array();
+
+	if (array.size() <= index)
+	{
+		return false;
+	}
+
+	array.insert(array.begin() + index, context);
+
+	return true;
+}
+
+bool Context::insert(size_t index, Context&& context)
+{
+	if (!this->is_array())
+	{
+		return false;
+	}
+
+	vector<Context>& array = this->get_array();
+
+	if (array.size() <= index)
+	{
+		return false;
+	}
+
+	array.insert(array.begin() + index, move(context));
+
+	return true;
+}
+
 bool Context::pop_back()
 {
 	if (!this->is_array())
@@ -178,7 +225,7 @@ bool Context::pop_back()
 	if (array.size())
 	{
 		array.pop_back();
-		
+
 		return true;
 	}
 
