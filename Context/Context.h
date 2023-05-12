@@ -5,7 +5,7 @@
 #include <string>
 #include <unordered_map>
 
-#ifdef CONTEXT_EXPORT
+#if defined(WIN32) && defined(CONTEXT_EXPORT)
 #define CONTEXT_API __declspec(dllexport)
 #else
 #define CONTEXT_API
@@ -60,13 +60,13 @@ public:
 
 	Context& operator = (Context&& other) noexcept;
 
-	void add_element(const std::string& key, const Context& context);
+	Context& add_element(const std::string& key, const Context& context);
 
-	void add_element(const std::string& key, Context&& context);
+	Context& add_element(const std::string& key, Context&& context);
 
-	void add_element(const Context& context);
+	Context& add_element(const Context& context);
 
-	void add_element(Context&& context);
+	Context& add_element(Context&& context);
 
 	bool is_valid() const;
 
@@ -107,6 +107,10 @@ public:
 	const Context& get_element(const std::string& key);
 	
 	std::string get_str(int depth = 1) const;
+
+	Context& operator [] (size_t index);
+
+	Context& operator [] (const std::string& key);
 
 	explicit operator bool () const;
 

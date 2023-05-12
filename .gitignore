@@ -13,5 +13,5 @@ _deps
 # VS folder
 .vs/
 
-# Binaries
+# Generated files
 out/

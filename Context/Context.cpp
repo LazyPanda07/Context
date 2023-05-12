@@ -83,7 +83,7 @@ Context& Context::operator = (Context&& other) noexcept
 	return *this;
 }
 
-void Context::add_element(const string& key, const Context& context)
+Context& Context::add_element(const string& key, const Context& context)
 {
 	if (data.index() != type_enum::container_type)
 	{
@@ -91,9 +91,11 @@ void Context::add_element(const string& key, const Context& context)
 	}
 
 	get<unordered_map<string, Context>>(data)[key] = context;
+
+	return *this;
 }
 
-void Context::add_element(const string& key, Context&& context)
+Context& Context::add_element(const string& key, Context&& context)
 {
 	if (data.index() != type_enum::container_type)
 	{
@@ -101,9 +103,11 @@ void Context::add_element(const string& key, Context&& context)
 	}
 
 	get<unordered_map<string, Context>>(data)[key] = move(context);
+
+	return *this;
 }
 
-void Context::add_element(const Context& context)
+Context& Context::add_element(const Context& context)
 {
 	if (data.index() != type_enum::array_type)
 	{
@@ -111,9 +115,11 @@ void Context::add_element(const Context& context)
 	}
 
 	get<vector<Context>>(data).push_back(context);
+
+	return *this;
 }
 
-void Context::add_element(Context&& context)
+Context& Context::add_element(Context&& context)
 {
 	if (data.index() != type_enum::array_type)
 	{
@@ -121,6 +127,8 @@ void Context::add_element(Context&& context)
 	}
 
 	get<vector<Context>>(data).push_back(move(context));
+
+	return *this;
 }
 
 bool Context::is_valid() const
@@ -289,6 +297,16 @@ string Context::get_str(int depth) const
 	}
 
 	return result;
+}
+
+Context& Context::operator [] (size_t index)
+{
+	return get<vector<Context>>(data).at(index);
+}
+
+Context& Context::operator [] (const string& key)
+{
+	return get<unordered_map<string, Context>>(data).at(key);
 }
 
 Context::operator bool() const
