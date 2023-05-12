@@ -12,3 +12,5 @@ endif()
 target_include_directories (Context PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 set_target_properties(Context PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+add_compile_definitions(CONTEXT_EXPORT)

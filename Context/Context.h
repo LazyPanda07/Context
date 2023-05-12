@@ -5,11 +5,17 @@
 #include <string>
 #include <unordered_map>
 
-class __declspec(dllexport) Context
+#ifdef CONTEXT_EXPORT
+#define CONTEXT_API __declspec(dllexport)
+#else
+#define CONTEXT_API
+#endif // CONTEXT_API
+
+class CONTEXT_API Context
 {
 private:
 	using type = std::variant<
-		nullptr_t,
+		std::nullptr_t,
 		int, double, bool, std::string,
 		std::vector<Context>,
 		std::unordered_map<std::string, Context>
