@@ -5,7 +5,7 @@
 #include <string>
 #include <unordered_map>
 
-class Context
+class __declspec(dllexport) Context
 {
 private:
 	using type = std::variant<

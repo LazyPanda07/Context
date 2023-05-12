@@ -13,3 +13,6 @@ project ("Context")
 
 # Include sub-projects.
 add_subdirectory ("Context")
+add_subdirectory ("Demonstration")
+
+include_directories(Context)
