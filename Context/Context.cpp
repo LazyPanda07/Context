@@ -43,7 +43,7 @@ Context::Context(string&& value) :
 Context::Context(const char* value) :
 	Context(string(value))
 {
-	
+
 }
 
 Context::Context(initializer_list<double> values) :
@@ -126,6 +126,36 @@ void Context::add_element(Context&& context)
 bool Context::is_valid() const
 {
 	return data.index();
+}
+
+bool Context::is_int() const
+{
+	return data.index() == type_enum::int_type;
+}
+
+bool Context::is_double() const
+{
+	return data.index() == type_enum::double_type;
+}
+
+bool Context::is_bool() const
+{
+	return data.index() == type_enum::bool_type;
+}
+
+bool Context::is_string() const
+{
+	return data.index() == type_enum::string_type;
+}
+
+bool Context::is_array() const
+{
+	return data.index() == type_enum::array_type;
+}
+
+bool Context::is_container() const
+{
+	return data.index() == type_enum::container_type;
 }
 
 void Context::set_scalar(int value)
@@ -241,7 +271,7 @@ string Context::get_str(int depth) const
 			string offset(depth * spaces_per_depth, ' ');
 			string_view previousDepthOffset(offset.data(), (depth - 1) * spaces_per_depth);
 			string tem = "{\n";
-			
+
 			for (const auto& [key, value] : this->get_container())
 			{
 				tem += format("{}{}: {},\n", offset, key, value.get_str(depth + 1));

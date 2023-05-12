@@ -64,6 +64,18 @@ public:
 
 	bool is_valid() const;
 
+	bool is_int() const;
+
+	bool is_double() const;
+
+	bool is_bool() const;
+
+	bool is_string() const;
+
+	bool is_array() const;
+
+	bool is_container() const;
+
 	void set_scalar(int value);
 	
 	void set_scalar(double value);
