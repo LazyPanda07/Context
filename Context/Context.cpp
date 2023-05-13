@@ -4,6 +4,125 @@
 
 using namespace std;
 
+using ContextIterator = Context::ContextIterator;
+
+#define CALL_PREFIX_OPERATOR(prefix_operator) \
+switch (type) \
+{ \
+case Context::ContextIterator::invalid: \
+	throw InvalidIteratorException(); \
+case Context::ContextIterator::array_type: \
+	prefix_operator##get<iterator_type_enum::array_type>(current_iterator); \
+	return *this; \
+case Context::ContextIterator::container_type: \
+	prefix_operator##get<iterator_type_enum::container_type>(current_iterator); \
+	return *this; \
+default: \
+	return *this; \
+}
+
+#define CALL_POSTFIX_OPERATOR(postfix_operator) \
+ContextIterator temp = *this; \
+switch (type) \
+{ \
+case Context::ContextIterator::invalid: \
+	throw InvalidIteratorException(); \
+case Context::ContextIterator::array_type: \
+	postfix_operator##get<iterator_type_enum::array_type>(current_iterator); \
+	return temp; \
+case Context::ContextIterator::container_type: \
+	postfix_operator##get<iterator_type_enum::container_type>(current_iterator); \
+	return temp; \
+default: \
+	return temp; \
+}
+
+ContextIterator::InvalidIteratorException::InvalidIteratorException() :
+	runtime_error("Iterator is invalid")
+{
+
+}
+
+ContextIterator::ContextIterator(Context& context, bool is_begin) :
+	type(iterator_type_enum::invalid)
+{
+	if (context.is_array())
+	{
+		vector<Context>& array = context.get_array();
+
+		begin_iterator = array.begin();
+		end_iterator = array.end();
+
+		type = iterator_type_enum::array_type;
+	}
+	else if (context.is_container())
+	{
+		unordered_map<string, Context>& container = context.get_container();
+
+		begin_iterator = container.begin();
+		end_iterator = container.end();
+
+		type = iterator_type_enum::container_type;
+	}
+
+	current_iterator = is_begin ? begin_iterator : end_iterator;
+}
+
+ContextIterator& ContextIterator::operator++()
+{
+	CALL_PREFIX_OPERATOR(++);
+}
+
+ContextIterator ContextIterator::operator++(int)
+{
+	CALL_POSTFIX_OPERATOR(++);
+}
+
+ContextIterator& ContextIterator::operator--()
+{
+	CALL_PREFIX_OPERATOR(--);
+}
+
+ContextIterator ContextIterator::operator--(int)
+{
+	CALL_POSTFIX_OPERATOR(--);
+}
+
+Context& ContextIterator::operator*()
+{
+	switch (type)
+	{
+	case Context::ContextIterator::invalid:
+		throw InvalidIteratorException();
+
+	case Context::ContextIterator::array_type:
+		return *get<iterator_type_enum::array_type>(current_iterator);
+
+	case Context::ContextIterator::container_type: 
+		return (*get<iterator_type_enum::container_type>(current_iterator)).second;
+	}
+}
+
+Context* ContextIterator::operator->()
+{
+	switch (type)
+	{
+	case Context::ContextIterator::invalid:
+		throw InvalidIteratorException();
+
+	case Context::ContextIterator::array_type:
+		return get<iterator_type_enum::array_type>(current_iterator).operator->();
+
+	case Context::ContextIterator::container_type:
+		return &(*get<iterator_type_enum::container_type>(current_iterator)).second;
+	}
+}
+
+bool ContextIterator::operator==(const ContextIterator& other) const noexcept
+{
+	return type != iterator_type_enum::invalid && other.type != iterator_type_enum::invalid && current_iterator == other.current_iterator;
+}
+
 Context::Context() :
 	spaces_per_depth(4)
 {
@@ -74,7 +193,7 @@ Context::Context(Context&& other) noexcept
 	(*this) = move(other);
 }
 
-Context& Context::operator = (const Context& other)
+Context& Context::operator=(const Context& other)
 {
 	data = other.data;
 
@@ -83,7 +202,7 @@ Context& Context::operator = (const Context& other)
 	return *this;
 }
 
-Context& Context::operator = (Context&& other) noexcept
+Context& Context::operator=(Context&& other) noexcept
 {
 	data = move(other.data);
 
@@ -140,7 +259,7 @@ Context& Context::add_element(Context&& context)
 	return *this;
 }
 
-bool Context::is_valid() const
+bool Context::is_valid() const noexcept
 {
 	return data.index();
 }
@@ -303,6 +422,16 @@ bool Context::remove(const string& key, bool recursive)
 	return false;
 }
 
+ContextIterator Context::begin()
+{
+	return ContextIterator(*this, true);
+}
+
+ContextIterator Context::end()
+{
+	return ContextIterator(*this, false);
+}
+
 void Context::set_scalar(int value)
 {
 	data = value;
@@ -446,22 +575,22 @@ string Context::get_str(int depth) const
 	return result;
 }
 
-Context& Context::operator [] (size_t index)
+Context& Context::operator[](size_t index)
 {
 	return get<vector<Context>>(data).at(index);
 }
 
-Context& Context::operator [] (const string& key)
+Context& Context::operator[](const string& key)
 {
 	return get<unordered_map<string, Context>>(data).at(key);
 }
 
-bool Context::operator == (const Context& other) const noexcept
+bool Context::operator==(const Context& other) const noexcept
 {
 	return this->is_valid() && other.is_valid() && data == other.data;
 }
 
-Context::operator bool() const
+Context::operator bool() const noexcept
 {
 	return this->is_valid();
 }

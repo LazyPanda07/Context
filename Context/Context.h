@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <stdexcept>
 
 #if defined(WIN32) && defined(CONTEXT_EXPORT)
 #define CONTEXT_API __declspec(dllexport)
@@ -36,6 +37,62 @@ private:
 	int spaces_per_depth;
 
 public:
+	class CONTEXT_API ContextIterator
+	{
+	private:
+		using iterator_type = std::variant<std::nullptr_t, std::vector<Context>::iterator, std::unordered_map<std::string, Context>::iterator>;
+
+		enum iterator_type_enum
+		{
+			invalid,
+			array_type,
+			container_type
+		};
+
+	private:
+		iterator_type current_iterator;
+		iterator_type begin_iterator;
+		iterator_type end_iterator;
+		iterator_type_enum type;
+
+	public:
+		class CONTEXT_API InvalidIteratorException : public std::runtime_error
+		{
+		public:
+			InvalidIteratorException();
+
+			~InvalidIteratorException() = default;
+		};
+
+	public:
+		ContextIterator(Context& context, bool is_begin);
+
+		ContextIterator(const ContextIterator& other) = default;
+
+		ContextIterator(ContextIterator&& other) noexcept = default;
+
+		ContextIterator& operator=(const ContextIterator& other) = default;
+
+		ContextIterator& operator=(ContextIterator&& other) noexcept = default;
+
+		ContextIterator& operator++();
+
+		ContextIterator operator++(int);
+
+		ContextIterator& operator--();
+
+		ContextIterator operator--(int);
+
+		Context& operator*();
+
+		Context* operator->();
+
+		bool operator==(const ContextIterator& other) const noexcept;
+
+		~ContextIterator() = default;
+	};
+
+public:
 	Context();
 
 	explicit Context(int value);
@@ -58,9 +115,9 @@ public:
 
 	Context(Context&& other) noexcept;
 
-	Context& operator = (const Context& other);
+	Context& operator=(const Context& other);
 
-	Context& operator = (Context&& other) noexcept;
+	Context& operator=(Context&& other) noexcept;
 
 	Context& add_element(const std::string& key, const Context& context);
 
@@ -70,7 +127,7 @@ public:
 
 	Context& add_element(Context&& context);
 
-	bool is_valid() const;
+	bool is_valid() const noexcept;
 
 	bool is_int() const;
 
@@ -98,6 +155,10 @@ public:
 	* @param recursive If key not in this container then try to find key in other containers inside this
 	*/
 	bool remove(const std::string& key, bool recursive = false);
+
+	ContextIterator begin();
+
+	ContextIterator end();
 
 	void set_scalar(int value);
 	
@@ -129,13 +190,13 @@ public:
 	
 	std::string get_str(int depth = 1) const;
 
-	Context& operator [] (size_t index);
+	Context& operator[](size_t index);
 
-	Context& operator [] (const std::string& key);
+	Context& operator[](const std::string& key);
 
-	bool operator == (const Context& other) const noexcept;
+	bool operator==(const Context& other) const noexcept;
 
-	explicit operator bool () const;
+	explicit operator bool() const noexcept;
 
 	~Context() = default;
 };
