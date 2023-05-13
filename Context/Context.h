@@ -36,6 +36,13 @@ private:
 	type data;
 	int spaces_per_depth;
 
+private:
+	template<typename T>
+	static bool recursive_remove(const T& remove_value, std::vector<Context>& data);
+
+	template<typename T>
+	static bool recursive_remove(const T& remove_value, std::unordered_map<std::string, Context>& data);
+
 public:
 	template<typename ArrayIteratorT, typename ContainerIteratorT>
 	class CONTEXT_API BaseContextIterator
@@ -170,7 +177,7 @@ public:
 
 	bool pop_back();
 
-	bool remove(const Context& context);
+	bool remove(const Context& context, bool recursive = false);
 
 	bool remove(size_t index);
 

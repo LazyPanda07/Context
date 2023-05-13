@@ -7,6 +7,34 @@ using namespace std;
 using ContextIterator = Context::ContextIterator;
 using ConstContextIterator = Context::ConstContextIterator;
 
+template<typename T>
+bool Context::recursive_remove(const T& remove_value, vector<Context>& data)
+{
+	for (T& value : data)
+	{
+		if (value.remove(remove_value, true))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+template<typename T>
+bool Context::recursive_remove(const T& remove_value, unordered_map<string, Context>& data)
+{
+	for (auto& [key, value] : data)
+	{
+		if (value.remove(remove_value, true))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 ContextIterator::ContextIterator(const iterator_type& iterator) :
 	BaseContextIterator(iterator)
 {
@@ -301,11 +329,16 @@ bool Context::pop_back()
 	return false;
 }
 
-bool Context::remove(const Context& context)
+bool Context::remove(const Context& context, bool recursive)
 {
 	if (this->is_array())
 	{
-		return erase(this->get_array(), context);
+		if (erase(this->get_array(), context))
+		{
+			return true;
+		}
+
+		return recursive && Context::recursive_remove(context, this->get_array());
 	}
 	else if (this->is_container())
 	{
@@ -320,6 +353,8 @@ bool Context::remove(const Context& context)
 				return true;
 			}
 		}
+
+		return recursive && Context::recursive_remove(context, container);
 	}
 
 	return false;
@@ -358,18 +393,7 @@ bool Context::remove(const string& key, bool recursive)
 		return true;
 	}
 
-	if (recursive)
-	{
-		for (auto& [key, value] : container)
-		{
-			if (value.remove(key, true))
-			{
-				return true;
-			}
-		}
-	}
-
-	return false;
+	return recursive && Context::recursive_remove(key, container);
 }
 
 ContextIterator Context::remove(const ContextIterator& it)
@@ -382,7 +406,7 @@ ContextIterator Context::remove(const ContextIterator& it)
 	case ContextIterator::iterator_type_enum::container_type:
 		return ContextIterator(this->get_container().erase(get<ContextIterator::iterator_container_type>(it.current_iterator)));
 	}
-	
+
 	throw InvalidContextIterator();
 }
 
