@@ -35,6 +35,16 @@ bool Context::recursive_remove(const T& remove_value, unordered_map<string, Cont
 	return false;
 }
 
+vector<Context>& Context::get_array()
+{
+	return get<vector<Context>>(data);
+}
+
+unordered_map<string, Context>& Context::get_container()
+{
+	return get<unordered_map<string, Context>>(data);
+}
+
 ContextIterator::ContextIterator(const iterator_type& iterator) :
 	BaseContextIterator(iterator)
 {
@@ -406,8 +416,6 @@ ContextIterator Context::remove(const ContextIterator& it)
 	case ContextIterator::iterator_type_enum::container_type:
 		return ContextIterator(this->get_container().erase(get<ContextIterator::iterator_container_type>(it.current_iterator)));
 	}
-
-	throw InvalidContextIterator();
 }
 
 ConstContextIterator Context::remove(const ConstContextIterator& it)
@@ -420,8 +428,6 @@ ConstContextIterator Context::remove(const ConstContextIterator& it)
 	case ConstContextIterator::iterator_type_enum::container_type:
 		return ConstContextIterator(this->get_container().erase(get<ConstContextIterator::iterator_container_type>(it.current_iterator)));
 	}
-
-	throw InvalidContextIterator();
 }
 
 ContextIterator Context::find(const string& key)
@@ -627,19 +633,9 @@ const string& Context::get_string() const
 	return get<string>(data);
 }
 
-vector<Context>& Context::get_array()
-{
-	return get<vector<Context>>(data);
-}
-
 const vector<Context>& Context::get_array() const
 {
 	return get<vector<Context>>(data);
-}
-
-unordered_map<string, Context>& Context::get_container()
-{
-	return get<unordered_map<string, Context>>(data);
 }
 
 const unordered_map<string, Context>& Context::get_container() const
@@ -649,7 +645,7 @@ const unordered_map<string, Context>& Context::get_container() const
 
 const Context& Context::get_element(const string& key)
 {
-	return get<unordered_map<string, Context>>(data)[key];
+	return get<unordered_map<string, Context>>(data).at(key);
 }
 
 string Context::get_str(int depth) const

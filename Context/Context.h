@@ -43,6 +43,11 @@ private:
 	template<typename T>
 	static bool recursive_remove(const T& remove_value, std::unordered_map<std::string, Context>& data);
 
+private:
+	std::vector<Context>& get_array();
+
+	std::unordered_map<std::string, Context>& get_container();
+
 public:
 	template<typename ArrayIteratorT, typename ContainerIteratorT>
 	class CONTEXT_API BaseContextIterator
@@ -190,20 +195,44 @@ public:
 
 	ConstContextIterator remove(const ConstContextIterator& it);
 
+	/*
+	* @exception InvalidContextIterator
+	*/
 	ContextIterator find(const std::string& key);
 
+	/*
+	* @exception InvalidContextIterator
+	*/
 	ContextIterator find(const Context& context);
 
+	/*
+	* @exception InvalidContextIterator
+	*/
 	ConstContextIterator find(const std::string& key) const;
 
+	/*
+	* @exception InvalidContextIterator
+	*/
 	ConstContextIterator find(const Context& context) const;
 
+	/*
+	* @exception InvalidContextIterator
+	*/
 	ConstContextIterator begin() const;
 
+	/*
+	* @exception InvalidContextIterator
+	*/
 	ContextIterator begin();
 
+	/*
+	* @exception InvalidContextIterator
+	*/
 	ConstContextIterator end() const;
 
+	/*
+	* @exception InvalidContextIterator
+	*/
 	ContextIterator end();
 
 	void set_scalar(int value);
@@ -216,28 +245,52 @@ public:
 
 	void set_scalar(std::string&& value);
 
+	/*
+	* @exception std::bad_variant_access
+	*/
 	int get_int() const;
 
+	/*
+	* @exception std::bad_variant_access
+	*/
 	double get_double() const;
 
+	/*
+	* @exception std::bad_variant_access
+	*/
 	bool get_bool() const;
 
+	/*
+	* @exception std::bad_variant_access
+	*/
 	const std::string& get_string() const;
 
-	std::vector<Context>& get_array();
-
+	/*
+	* @exception std::bad_variant_access
+	*/
 	const std::vector<Context>& get_array() const;
 
-	std::unordered_map<std::string, Context>& get_container();
-
+	/*
+	* @exception std::bad_variant_access
+	*/
 	const std::unordered_map<std::string, Context>& get_container() const;
 
+	/*
+	* @exception std::bad_variant_access
+	* @exception std::out_of_range
+	*/
 	const Context& get_element(const std::string& key);
 	
 	std::string get_str(int depth = 1) const;
 
+	/*
+	* @exception std::out_of_range
+	*/
 	Context& operator[](size_t index);
 
+	/*
+	* @exception std::out_of_range
+	*/
 	Context& operator[](const std::string& key);
 
 	bool operator==(const Context& other) const noexcept;
