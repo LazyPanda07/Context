@@ -35,16 +35,6 @@ bool Context::recursive_remove(const T& remove_value, unordered_map<string, Cont
 	return false;
 }
 
-vector<Context>& Context::get_array()
-{
-	return get<vector<Context>>(data);
-}
-
-unordered_map<string, Context>& Context::get_container()
-{
-	return get<unordered_map<string, Context>>(data);
-}
-
 ContextIterator::ContextIterator(const iterator_type& iterator) :
 	BaseContextIterator(iterator)
 {
@@ -168,6 +158,15 @@ Context::Context(initializer_list<int> values) :
 	for (int value : values)
 	{
 		this->add_element(Context(value));
+	}
+}
+
+Context::Context(std::initializer_list<std::pair<std::string, Context>> values) :
+	Context()
+{
+	for (const auto& [key, value] : values)
+	{
+		this->add_element(key, value);
 	}
 }
 
@@ -638,7 +637,17 @@ const vector<Context>& Context::get_array() const
 	return get<vector<Context>>(data);
 }
 
+vector<Context>& Context::get_array()
+{
+	return get<vector<Context>>(data);
+}
+
 const unordered_map<string, Context>& Context::get_container() const
+{
+	return get<unordered_map<string, Context>>(data);
+}
+
+unordered_map<string, Context>& Context::get_container()
 {
 	return get<unordered_map<string, Context>>(data);
 }
@@ -739,4 +748,9 @@ bool Context::operator==(const Context& other) const noexcept
 Context::operator bool() const noexcept
 {
 	return this->is_valid();
+}
+
+ostream& operator << (std::ostream& out_stream, const Context& context)
+{
+	return out_stream << context.get_str();
 }

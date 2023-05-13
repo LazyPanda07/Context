@@ -3,7 +3,7 @@
 #
 
 # Add source to this project's executable.
-add_library (Context SHARED "Context.cpp" "Context.h")
+add_library (Context SHARED "Context.cpp" "Context.h" "Context.inl")
 
 if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.12)
   set_property(TARGET Context PROPERTY CXX_STANDARD 20)

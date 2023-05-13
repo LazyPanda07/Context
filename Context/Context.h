@@ -5,6 +5,7 @@
 #include <string>
 #include <unordered_map>
 #include <stdexcept>
+#include <ostream>
 
 #if defined(WIN32) && defined(CONTEXT_EXPORT)
 #define CONTEXT_API __declspec(dllexport)
@@ -42,11 +43,6 @@ private:
 
 	template<typename T>
 	static bool recursive_remove(const T& remove_value, std::unordered_map<std::string, Context>& data);
-
-private:
-	std::vector<Context>& get_array();
-
-	std::unordered_map<std::string, Context>& get_container();
 
 public:
 	template<typename ArrayIteratorT, typename ContainerIteratorT>
@@ -145,6 +141,8 @@ public:
 	explicit Context(std::initializer_list<double> values);
 
 	explicit Context(std::initializer_list<int> values);
+
+	Context(std::initializer_list<std::pair<std::string, Context>> values);
 
 	Context(const Context& other);
 
@@ -273,7 +271,17 @@ public:
 	/*
 	* @exception std::bad_variant_access
 	*/
+	std::vector<Context>& get_array();
+
+	/*
+	* @exception std::bad_variant_access
+	*/
 	const std::unordered_map<std::string, Context>& get_container() const;
+
+	/*
+	* @exception std::bad_variant_access
+	*/
+	std::unordered_map<std::string, Context>& get_container();
 
 	/*
 	* @exception std::bad_variant_access
@@ -296,6 +304,8 @@ public:
 	bool operator==(const Context& other) const noexcept;
 
 	explicit operator bool() const noexcept;
+
+	friend CONTEXT_API std::ostream& operator << (std::ostream& out_stream, const Context& context);
 
 	~Context() = default;
 };
