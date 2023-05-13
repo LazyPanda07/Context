@@ -37,59 +37,82 @@ private:
 	int spaces_per_depth;
 
 public:
-	class CONTEXT_API ContextIterator
+	template<typename ArrayIteratorT, typename ContainerIteratorT>
+	class CONTEXT_API BaseContextIterator
 	{
-	private:
-		using iterator_type = std::variant<std::nullptr_t, std::vector<Context>::iterator, std::unordered_map<std::string, Context>::iterator>;
+	public:
+		using iterator_array_type = ArrayIteratorT;
+		using iterator_container_type = ContainerIteratorT;
+		using iterator_type = std::variant<iterator_array_type, iterator_container_type>;
 
 		enum iterator_type_enum
 		{
-			invalid,
 			array_type,
 			container_type
 		};
 
-	private:
+	protected:
 		iterator_type current_iterator;
-		iterator_type begin_iterator;
-		iterator_type end_iterator;
 		iterator_type_enum type;
 
 	public:
-		class CONTEXT_API InvalidIteratorException : public std::runtime_error
-		{
-		public:
-			InvalidIteratorException();
+		BaseContextIterator(const iterator_type& iterator);
 
-			~InvalidIteratorException() = default;
-		};
+		BaseContextIterator(const BaseContextIterator& other) = default;
 
+		BaseContextIterator(BaseContextIterator&& other) noexcept = default;
+
+		BaseContextIterator& operator=(const BaseContextIterator& other) = default;
+
+		BaseContextIterator& operator=(BaseContextIterator&& other) noexcept = default;
+
+		BaseContextIterator& operator++() noexcept;
+
+		BaseContextIterator operator++(int) noexcept;
+
+		BaseContextIterator& operator--() noexcept;
+
+		BaseContextIterator operator--(int) noexcept;
+
+		bool operator==(const BaseContextIterator& other) const noexcept;
+
+		virtual ~BaseContextIterator() = default;
+	};
+
+	class CONTEXT_API ContextIterator : public BaseContextIterator<std::vector<Context>::iterator, std::unordered_map<std::string, Context>::iterator>
+	{
 	public:
-		ContextIterator(Context& context, bool is_begin);
+		ContextIterator(const iterator_type& iterator);
 
-		ContextIterator(const ContextIterator& other) = default;
+		Context& operator*() noexcept;
 
-		ContextIterator(ContextIterator&& other) noexcept = default;
-
-		ContextIterator& operator=(const ContextIterator& other) = default;
-
-		ContextIterator& operator=(ContextIterator&& other) noexcept = default;
-
-		ContextIterator& operator++();
-
-		ContextIterator operator++(int);
-
-		ContextIterator& operator--();
-
-		ContextIterator operator--(int);
-
-		Context& operator*();
-
-		Context* operator->();
-
-		bool operator==(const ContextIterator& other) const noexcept;
+		Context* operator->() noexcept;
 
 		~ContextIterator() = default;
+
+		friend class Context;
+	};
+
+	class CONTEXT_API ConstContextIterator : public BaseContextIterator<std::vector<Context>::const_iterator, std::unordered_map<std::string, Context>::const_iterator>
+	{
+	public:
+		ConstContextIterator(const iterator_type& iterator);
+
+		const Context& operator*() noexcept;
+
+		const Context* operator->() noexcept;
+
+		~ConstContextIterator() = default;
+
+		friend class Context;
+	};
+
+	class CONTEXT_API InvalidContextIterator : public std::runtime_error
+	{
+	public:
+		InvalidContextIterator();
+
+		~InvalidContextIterator() = default;
 	};
 
 public:
@@ -156,7 +179,23 @@ public:
 	*/
 	bool remove(const std::string& key, bool recursive = false);
 
+	ContextIterator remove(const ContextIterator& it);
+
+	ConstContextIterator remove(const ConstContextIterator& it);
+
+	ContextIterator find(const std::string& key);
+
+	ContextIterator find(const Context& context);
+
+	ConstContextIterator find(const std::string& key) const;
+
+	ConstContextIterator find(const Context& context) const;
+
+	ConstContextIterator begin() const;
+
 	ContextIterator begin();
+
+	ConstContextIterator end() const;
 
 	ContextIterator end();
 
@@ -200,3 +239,5 @@ public:
 
 	~Context() = default;
 };
+
+#include "Context.inl"

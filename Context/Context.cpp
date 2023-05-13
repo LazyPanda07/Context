@@ -5,111 +5,30 @@
 using namespace std;
 
 using ContextIterator = Context::ContextIterator;
+using ConstContextIterator = Context::ConstContextIterator;
 
-#define CALL_PREFIX_OPERATOR(prefix_operator) \
-switch (type) \
-{ \
-case Context::ContextIterator::invalid: \
-	throw InvalidIteratorException(); \
-case Context::ContextIterator::array_type: \
-	prefix_operator##get<iterator_type_enum::array_type>(current_iterator); \
-	return *this; \
-case Context::ContextIterator::container_type: \
-	prefix_operator##get<iterator_type_enum::container_type>(current_iterator); \
-	return *this; \
-default: \
-	return *this; \
-}
-
-#define CALL_POSTFIX_OPERATOR(postfix_operator) \
-ContextIterator temp = *this; \
-switch (type) \
-{ \
-case Context::ContextIterator::invalid: \
-	throw InvalidIteratorException(); \
-case Context::ContextIterator::array_type: \
-	postfix_operator##get<iterator_type_enum::array_type>(current_iterator); \
-	return temp; \
-case Context::ContextIterator::container_type: \
-	postfix_operator##get<iterator_type_enum::container_type>(current_iterator); \
-	return temp; \
-default: \
-	return temp; \
-}
-
-ContextIterator::InvalidIteratorException::InvalidIteratorException() :
-	runtime_error("Iterator is invalid")
+ContextIterator::ContextIterator(const iterator_type& iterator) :
+	BaseContextIterator(iterator)
 {
 
 }
 
-ContextIterator::ContextIterator(Context& context, bool is_begin) :
-	type(iterator_type_enum::invalid)
-{
-	if (context.is_array())
-	{
-		vector<Context>& array = context.get_array();
-
-		begin_iterator = array.begin();
-		end_iterator = array.end();
-
-		type = iterator_type_enum::array_type;
-	}
-	else if (context.is_container())
-	{
-		unordered_map<string, Context>& container = context.get_container();
-
-		begin_iterator = container.begin();
-		end_iterator = container.end();
-
-		type = iterator_type_enum::container_type;
-	}
-
-	current_iterator = is_begin ? begin_iterator : end_iterator;
-}
-
-ContextIterator& ContextIterator::operator++()
-{
-	CALL_PREFIX_OPERATOR(++);
-}
-
-ContextIterator ContextIterator::operator++(int)
-{
-	CALL_POSTFIX_OPERATOR(++);
-}
-
-ContextIterator& ContextIterator::operator--()
-{
-	CALL_PREFIX_OPERATOR(--);
-}
-
-ContextIterator ContextIterator::operator--(int)
-{
-	CALL_POSTFIX_OPERATOR(--);
-}
-
-Context& ContextIterator::operator*()
+Context& ContextIterator::operator*() noexcept
 {
 	switch (type)
 	{
-	case Context::ContextIterator::invalid:
-		throw InvalidIteratorException();
-
 	case Context::ContextIterator::array_type:
 		return *get<iterator_type_enum::array_type>(current_iterator);
 
-	case Context::ContextIterator::container_type: 
+	case Context::ContextIterator::container_type:
 		return (*get<iterator_type_enum::container_type>(current_iterator)).second;
 	}
 }
 
-Context* ContextIterator::operator->()
+Context* ContextIterator::operator->() noexcept
 {
 	switch (type)
 	{
-	case Context::ContextIterator::invalid:
-		throw InvalidIteratorException();
-
 	case Context::ContextIterator::array_type:
 		return get<iterator_type_enum::array_type>(current_iterator).operator->();
 
@@ -118,9 +37,40 @@ Context* ContextIterator::operator->()
 	}
 }
 
-bool ContextIterator::operator==(const ContextIterator& other) const noexcept
+ConstContextIterator::ConstContextIterator(const iterator_type& iterator) :
+	BaseContextIterator(iterator)
 {
-	return type != iterator_type_enum::invalid && other.type != iterator_type_enum::invalid && current_iterator == other.current_iterator;
+
+}
+
+const Context& ConstContextIterator::operator*() noexcept
+{
+	switch (type)
+	{
+	case Context::ConstContextIterator::array_type:
+		return *get<iterator_type_enum::array_type>(current_iterator);
+
+	case Context::ConstContextIterator::container_type:
+		return (*get<iterator_type_enum::container_type>(current_iterator)).second;
+	}
+}
+
+const Context* ConstContextIterator::operator->() noexcept
+{
+	switch (type)
+	{
+	case Context::ConstContextIterator::array_type:
+		return get<iterator_type_enum::array_type>(current_iterator).operator->();
+
+	case Context::ConstContextIterator::container_type:
+		return &(*get<iterator_type_enum::container_type>(current_iterator)).second;
+	}
+}
+
+Context::InvalidContextIterator::InvalidContextIterator() :
+	runtime_error("Can't create iterator for this context")
+{
+
 }
 
 Context::Context() :
@@ -422,14 +372,190 @@ bool Context::remove(const string& key, bool recursive)
 	return false;
 }
 
+ContextIterator Context::remove(const ContextIterator& it)
+{
+	switch (it.type)
+	{
+	case ContextIterator::iterator_type_enum::array_type:
+		return ContextIterator(this->get_array().erase(get<ContextIterator::iterator_array_type>(it.current_iterator)));
+
+	case ContextIterator::iterator_type_enum::container_type:
+		return ContextIterator(this->get_container().erase(get<ContextIterator::iterator_container_type>(it.current_iterator)));
+	}
+	
+	throw InvalidContextIterator();
+}
+
+ConstContextIterator Context::remove(const ConstContextIterator& it)
+{
+	switch (it.type)
+	{
+	case ConstContextIterator::iterator_type_enum::array_type:
+		return ConstContextIterator(this->get_array().erase(get<ConstContextIterator::iterator_array_type>(it.current_iterator)));
+
+	case ConstContextIterator::iterator_type_enum::container_type:
+		return ConstContextIterator(this->get_container().erase(get<ConstContextIterator::iterator_container_type>(it.current_iterator)));
+	}
+
+	throw InvalidContextIterator();
+}
+
+ContextIterator Context::find(const string& key)
+{
+	if (!this->is_container())
+	{
+		throw InvalidContextIterator();
+	}
+
+	unordered_map<string, Context>& container = this->get_container();
+
+	if (auto it = container.find(key); it != container.end())
+	{
+		return ContextIterator(it);
+	}
+
+	return ContextIterator(container.end());
+}
+
+ContextIterator Context::find(const Context& context)
+{
+	if (this->is_array())
+	{
+		vector<Context>& array = this->get_array();
+
+		for (size_t i = 0; i < array.size(); i++)
+		{
+			if (array[i] == context)
+			{
+				return ContextIterator(array.begin() + i);
+			}
+		}
+
+		return ContextIterator(array.end());
+	}
+	else if (this->is_container())
+	{
+		unordered_map<string, Context>& container = this->get_container();
+
+		for (const auto& [key, value] : container)
+		{
+			if (value == context)
+			{
+				return ContextIterator(container.find(key));
+			}
+		}
+
+		return ContextIterator(container.end());
+	}
+
+	throw InvalidContextIterator();
+}
+
+ConstContextIterator Context::find(const string& key) const
+{
+	if (!this->is_container())
+	{
+		throw InvalidContextIterator();
+	}
+
+	const unordered_map<string, Context>& container = this->get_container();
+
+	if (auto it = container.find(key); it != container.end())
+	{
+		return ConstContextIterator(it);
+	}
+
+	return ConstContextIterator(container.end());
+}
+
+ConstContextIterator Context::find(const Context& context) const
+{
+	if (this->is_array())
+	{
+		const vector<Context>& array = this->get_array();
+
+		for (size_t i = 0; i < array.size(); i++)
+		{
+			if (array[i] == context)
+			{
+				return ConstContextIterator(array.begin() + i);
+			}
+		}
+
+		return ConstContextIterator(array.end());
+	}
+	else if (this->is_container())
+	{
+		const unordered_map<string, Context>& container = this->get_container();
+
+		for (const auto& [key, value] : container)
+		{
+			if (value == context)
+			{
+				return ConstContextIterator(container.find(key));
+			}
+		}
+
+		return ConstContextIterator(container.end());
+	}
+
+	throw InvalidContextIterator();
+}
+
+ConstContextIterator Context::begin() const
+{
+	if (this->is_array())
+	{
+		return ConstContextIterator(this->get_array().cbegin());
+	}
+	else if (this->is_container())
+	{
+		return ConstContextIterator(this->get_container().cbegin());
+	}
+
+	throw InvalidContextIterator();
+}
+
 ContextIterator Context::begin()
 {
-	return ContextIterator(*this, true);
+	if (this->is_array())
+	{
+		return ContextIterator(this->get_array().begin());
+	}
+	else if (this->is_container())
+	{
+		return ContextIterator(this->get_container().begin());
+	}
+
+	throw InvalidContextIterator();
+}
+
+ConstContextIterator Context::end() const
+{
+	if (this->is_array())
+	{
+		return ConstContextIterator(this->get_array().cend());
+	}
+	else if (this->is_container())
+	{
+		return ConstContextIterator(this->get_container().cend());
+	}
+
+	throw InvalidContextIterator();
 }
 
 ContextIterator Context::end()
 {
-	return ContextIterator(*this, false);
+	if (this->is_array())
+	{
+		return ContextIterator(this->get_array().end());
+	}
+	else if (this->is_container())
+	{
+		return ContextIterator(this->get_container().end());
+	}
+
+	throw InvalidContextIterator();
 }
 
 void Context::set_scalar(int value)

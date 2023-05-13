@@ -35,7 +35,7 @@ int main(int argc, char** argv)
 	ctx3.add_element(Context(2));
 	ctx3.add_element(Context(3));
 
-	for (const auto& i : ctx3.get_array())
+	for (const auto& i : ctx3)
 	{
 		cout << i.get_int() << endl;
 	}
